@@ -44,8 +44,8 @@ module.exports.updateUser = (req, res) => {
   const userId = req.user._id;
 
   User.findByIdAndUpdate(userId, { name, about }, {
-    new: true, // обработчик then получит на вход обновлённую запись
-    runValidators: true, // данные будут валидированы перед изменением
+    new: true,
+    runValidators: true,
   })
     .then((user) => {
       if (user) {
@@ -57,6 +57,8 @@ module.exports.updateUser = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Неправильный, некорректный запрос' });
+      } else if (err.name === 'CastError') {
+        res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Некорректный id' });
       } else {
         res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' });
       }
@@ -80,6 +82,8 @@ module.exports.updateUserAvatar = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Неправильный, некорректный запрос' });
+      } else if (err.name === 'CastError') {
+        res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Некорректный id' });
       } else {
         res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' });
       }
