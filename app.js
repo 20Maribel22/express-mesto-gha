@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { constants } = require('http2');
 const bodyParser = require('body-parser');
 
 const userRouter = require('./routes/users');
@@ -23,6 +24,10 @@ app.use((req, res, next) => {
 
 app.use('/', userRouter);
 app.use('/', cardRouter);
+
+app.use((req, res) => {
+  res.status(constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
+});
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
