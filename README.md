@@ -1,5 +1,12 @@
 [![Tests](../../actions/workflows/tests-13-sprint.yml/badge.svg)](../../actions/workflows/tests-13-sprint.yml) [![Tests](../../actions/workflows/tests-14-sprint.yml/badge.svg)](../../actions/workflows/tests-14-sprint.yml)
 # Проект Mesto фронтенд + бэкенд
+В 13 проекте реализован backend проекта Mesto.
+
+## При созданиии проекта были использованы следующие технологии:
+* Express.
+* MongoDB.
+* Node.js.
+* Mongoose.
 
 
 ## Директории
@@ -14,3 +21,7 @@
 
 `npm run start` — запускает сервер   
 `npm run dev` — запускает сервер с hot-reload
+
+## Посмотреть
+
+* [Ссылка на проект](https://github.com/20Maribel22/express-mesto-gha)
