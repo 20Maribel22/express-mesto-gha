@@ -152,10 +152,8 @@ module.exports.login = (req, res, next) => {
         // token - наш JWT токен, который мы отправляем
         maxAge: 3600000 * 24,
         httpOnly: true,
-      });
-
-      // вернём токен
-      res.send({ token });
+      })
+        .status(200).send({ message: 'Успешная авторизация!' });
     })
     .catch(() => next(new ServerError('Произошла внутренняя ошибка сервера')));
 };
