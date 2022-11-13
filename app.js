@@ -8,6 +8,7 @@ const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
+const auth = require('./middlewares/auth');
 
 const regex = /^http[s]*:\/\/.+$/;
 
@@ -35,14 +36,21 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.use('/', userRouter);
-app.use('/', cardRouter);
+app.use('/', auth, userRouter);
+app.use('/', auth, cardRouter);
 
 app.use('*', (req, res, next) => {
   next(new NotFoundError('Cтраница не найдена'));
 });
 
 app.use(errors());
+
+app.use((err, req, res, next) => {
+  res
+    .status(err.statusCode)
+    .send({ message: err.message });
+  next();
+});
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

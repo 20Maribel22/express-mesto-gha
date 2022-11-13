@@ -22,7 +22,7 @@ module.exports.getAboutUser = (req, res, next) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь по указанному id не найден');
+        next(new NotFoundError('Пользователь по указанному id не найден'));
       }
     })
     .catch((err) => {
@@ -40,7 +40,7 @@ module.exports.getUserId = (req, res, next) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь по указанному id не найден');
+        next(new NotFoundError('Пользователь по указанному id не найден'));
       }
     })
     .catch((err) => {
@@ -97,7 +97,7 @@ module.exports.updateUser = (req, res, next) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь по указанному id не найден');
+        next(new NotFoundError('Пользователь по указанному id не найден'));
       }
     })
     .catch((err) => {
@@ -120,7 +120,7 @@ module.exports.updateUserAvatar = (req, res, next) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь по указанному id не найден');
+        next(new NotFoundError('Пользователь по указанному id не найден'));
       }
     })
     .catch((err) => {
