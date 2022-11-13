@@ -45,6 +45,12 @@ app.use('*', (req, res, next) => {
 
 app.use(errors());
 
+app.use((err, req, res) => {
+  res
+    .status(err.statusCode)
+    .send({ message: err.message });
+});
+
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Сервер запущен на порту ${PORT}`);
