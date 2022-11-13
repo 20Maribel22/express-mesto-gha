@@ -69,13 +69,24 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     })
-      .then((user) => res.send({ data: user }))
-      .catch((err) => {
-        if (err.name === 'ValidationError') {
-          next(new BadRequestError('Неправильный, некорректный запрос'));
+      .then((user) => {
+        if (!user) {
+          throw new BadRequestError('Неправильный, некорректный запрос');
         }
+        return res.status(200).send({
+          data: {
+            name,
+            about,
+            avatar,
+            email,
+          },
+        });
+      })
+      .catch((err) => {
         if (err.code === 11000) {
           next(new ConflictError('Пользователь с такими данными уже зарегистрирован!'));
+        } else if (err.name === 'ValidationError') {
+          next(new BadRequestError('Неправильный, некорректный запрос'));
         } else {
           next(new ServerError('Произошла внутренняя ошибка сервера'));
         }
