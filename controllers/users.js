@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
-const UnauthorizedError = require('../errors/UnauthorizedError');
 const ConflictError = require('../errors/ConflictError');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
@@ -69,18 +68,10 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     })
-      .then((user) => {
-        if (!user) {
-          throw new BadRequestError('Неправильный, некорректный запрос');
-        }
-        return res.status(200).send({
-          data: {
-            name,
-            about,
-            avatar,
-            email,
-          },
-        });
+      .then((document) => {
+        const user = document.toObject();
+        delete user.password;
+        res.send({ data: user });
       })
       .catch((err) => {
         if (err.code === 11000) {
@@ -143,19 +134,7 @@ module.exports.updateUserAvatar = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  User.findOne({ email }).select('+password')
-    .then((user) => {
-      if (!user) {
-        throw new UnauthorizedError('Неправильные почта или пароль');
-      }
-      // сравниваем переданный пароль и хеш из базы
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          throw new UnauthorizedError('Неправильные почта или пароль');
-        }
-        return user;
-      });
-    })
+  return User.findUserByCredentials(email, password, next)
     .then((user) => {
       // создадим токен
       const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : SECRET_CODE, { expiresIn: '7d' });
@@ -164,7 +143,7 @@ module.exports.login = (req, res, next) => {
         maxAge: 3600000 * 24,
         httpOnly: true,
       })
-        .status(200).send({ message: 'Успешная авторизация!' });
+        .send({ token });
     })
     .catch(() => next(new ServerError('Произошла внутренняя ошибка сервера')));
 };

@@ -5,10 +5,12 @@ const UnauthorizedError = require('../errors/UnauthorizedError');
 const SECRET_CODE = require('../utils/config');
 
 const auth = (req, res, next) => {
-  if (!req.cookies.jwt) {
+  const { authorization } = req.headers;
+
+  if (!authorization || !authorization.startsWith('Bearer ')) {
     throw new UnauthorizedError('Необходима авторизация!');
   }
-  const token = req.cookies.jwt;
+  const token = authorization.replace(/^Bearer\s/i, '');
   let payload;
 
   try {
