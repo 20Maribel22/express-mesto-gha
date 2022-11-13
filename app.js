@@ -8,7 +8,6 @@ const { celebrate, Joi, errors } = require('celebrate');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
-const auth = require('./middlewares/auth');
 
 const regex = /^http[s]*:\/\/.+$/;
 
@@ -36,9 +35,6 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
   }),
 }), createUser);
-
-// авторизация
-app.use(auth);
 
 app.use('/', userRouter);
 app.use('/', cardRouter);
