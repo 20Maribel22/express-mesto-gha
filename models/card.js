@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const regex = /^https?:\/\/(www.)?[\w\-/.]+[-._~:/?#[\]@!$'()*+,;=]*#?/;
+const regex = /^http[s]*:\/\/.+$/;
 
 const cardSchema = new mongoose.Schema({
   name: {
