@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const isEmail = require('validator/lib/isEmail');
 
-const regex = /^http[s]*:\/\/.+$/;
+const regex = /^https?:\/\/(www.)?[\w\-/.]+[-._~:/?#[\]@!$'()*+,;=]*#?/;
 
 const userSchema = new mongoose.Schema({
   name: {
