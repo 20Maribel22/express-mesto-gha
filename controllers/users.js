@@ -1,45 +1,89 @@
-const { constants } = require('http2');
-const User = require('../models/user');
+const { NODE_ENV, JWT_SECRET } = process.env;
 
-module.exports.getUsers = (req, res) => {
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const User = require('../models/user');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const ConflictError = require('../errors/ConflictError');
+const NotFoundError = require('../errors/NotFoundError');
+const BadRequestError = require('../errors/BadRequestError');
+const ServerError = require('../errors/ServerError');
+const SECRET_CODE = require('../utils/config');
+
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' }));
+    .catch(() => next(new ServerError('Произошла внутренняя ошибка сервера')));
 };
 
-module.exports.getUserId = (req, res) => {
+module.exports.getAboutUser = (req, res, next) => {
+  User.findById(req.user_id)
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        throw new NotFoundError('Пользователь по указанному id не найден');
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Неправильный, некорректный запрос'));
+      } else {
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
+      }
+    });
+};
+
+module.exports.getUserId = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res.status(constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
+        throw new NotFoundError('Пользователь по указанному id не найден');
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-
-  User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Неправильный, некорректный запрос' });
-      } else {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' });
-      }
-    });
+module.exports.createUser = (req, res, next) => {
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+  bcrypt.hash(password, 10).then((hash) => {
+    User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    })
+      .then((user) => res.send({ data: user }))
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          next(new BadRequestError('Неправильный, некорректный запрос'));
+        }
+        if (err.code === 11000) {
+          next(new ConflictError('Пользователь с такими данными уже зарегистрирован!'));
+        } else {
+          next(new ServerError('Произошла внутренняя ошибка сервера'));
+        }
+      });
+  });
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
 
@@ -51,19 +95,19 @@ module.exports.updateUser = (req, res) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res.status(constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
+        throw new NotFoundError('Пользователь по указанному id не найден');
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
 };
 
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   const userId = req.user._id;
 
@@ -74,14 +118,44 @@ module.exports.updateUserAvatar = (req, res) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res.status(constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
+        throw new NotFoundError('Пользователь по указанному id не найден');
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  User.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        throw new UnauthorizedError('Неправильные почта или пароль');
+      }
+      // сравниваем переданный пароль и хеш из базы
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          throw new UnauthorizedError('Неправильные почта или пароль');
+        }
+        return user;
+      });
+    })
+    .then((user) => {
+      // создадим токен
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : SECRET_CODE, { expiresIn: '7d' });
+      res.cookie('jwt', token, {
+        // token - наш JWT токен, который мы отправляем
+        maxAge: 3600000 * 24,
+        httpOnly: true,
+      });
+
+      // вернём токен
+      res.send({ token });
+    })
+    .catch(() => next(new ServerError('Произошла внутренняя ошибка сервера')));
 };

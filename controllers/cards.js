@@ -1,15 +1,16 @@
-const { constants } = require('http2');
 const Card = require('../models/card');
+const NotFoundError = require('../errors/NotFoundError');
+const BadRequestError = require('../errors/BadRequestError');
+const ForbiddenError = require('../errors/ForbiddenError');
+const ServerError = require('../errors/ServerError');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res
-      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: 'Произошла внутренняя ошибка сервера' }));
+    .catch(() => next(new ServerError('Произошла внутренняя ошибка сервера')));
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
 
@@ -17,42 +18,34 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
-      if (card) {
-        res.send({ data: card });
-      } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Карточка по указанному id не найдена' });
+      if (!card) {
+        throw new NotFoundError('Карточка по указанному id не найдена');
+      } else if (req.user._id !== card.owner.toString()) {
+        throw new ForbiddenError('Нельзя удалить карточку!');
       }
+      return card.remove()
+        .then(() => res.status(200).send({ message: 'Карточка удалена' }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   const userId = req.user._id;
 
   Card.findByIdAndUpdate(
@@ -64,25 +57,19 @@ module.exports.likeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Карточка по указанному id не найдена' });
+        throw new NotFoundError('Карточка по указанному id не найдена');
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   const userId = req.user._id;
 
   Card.findByIdAndUpdate(
@@ -94,20 +81,14 @@ module.exports.dislikeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Карточка по указанному id не найдена' });
+        throw new NotFoundError('Карточка по указанному id не найдена');
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Неправильный, некорректный запрос' });
+        next(new BadRequestError('Неправильный, некорректный запрос'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Произошла внутренняя ошибка сервера' });
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
     });
 };
