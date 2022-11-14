@@ -8,6 +8,7 @@ const ConflictError = require('../errors/ConflictError');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const ServerError = require('../errors/ServerError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -146,7 +147,7 @@ module.exports.login = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'UnauthorizedError') {
-        next(err);
+        next(new UnauthorizedError('Неправильные почта или пароль'));
       } else {
         next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
