@@ -10,7 +10,7 @@ const { login, createUser } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
 const auth = require('./middlewares/auth');
 
-const regex = /^http[s]*:\/\/.+$/;
+const regex = /^([-A-Za-z0-9]+.?([A-Za-z0-9]+)?)@([-A-Za-z0-9]+).([A-Za-z0-9]+.?[A-Za-z0-9]+)$/;
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -39,16 +39,16 @@ app.post('/signup', celebrate({
 app.use('/', auth, userRouter);
 app.use('/', auth, cardRouter);
 
-app.use('*', (req, res, next) => {
+app.use('*', auth, (req, res, next) => {
   next(new NotFoundError('Cтраница не найдена'));
 });
 
 app.use(errors());
 
 app.use((err, req, res, next) => {
-  res
-    .status(err.statusCode)
-    .send({ message: err.message });
+  const status = err.statusCode || 500;
+  const message = status === 500 ? 'Ошибка на сервере' : err.message;
+  res.status(status).send({ message });
   next();
 });
 
