@@ -10,7 +10,7 @@ const { login, createUser } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
 const auth = require('./middlewares/auth');
 
-const regex = /^([-A-Za-z0-9]+.?([A-Za-z0-9]+)?)@([-A-Za-z0-9]+).([A-Za-z0-9]+.?[A-Za-z0-9]+)$/;
+const regex = /^https?:\/\/(www.)?[\w\-/.]+[-._~:/?#[\]@!$'()*+,;=]*#?/;
 
 const { PORT = 3000 } = process.env;
 const app = express();
