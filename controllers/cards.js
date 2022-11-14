@@ -31,7 +31,7 @@ module.exports.deleteCard = (req, res, next) => {
       if (!card) {
         throw new NotFoundError('Карточка по указанному id не найдена');
       }
-      if (card.owner.toString() !== req.user._id) {
+      if (req.user._id !== String(card.owner)) {
         throw new ForbiddenError('Нельзя удалить чужую карточку!');
       }
       return card.remove()
@@ -40,9 +40,8 @@ module.exports.deleteCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Неправильный, некорректный запрос'));
-      } else {
-        next(new ServerError('Произошла внутренняя ошибка сервера'));
       }
+      next(err);
     });
 };
 
