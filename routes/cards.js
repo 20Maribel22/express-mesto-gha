@@ -1,7 +1,7 @@
 const cardRouter = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
 
-const regex = /^https?:\/\/(www\.)?[a-zA-Z\0-9]+\.[\w\-._~:/?#[\]@!$&'()*+,;=]{2,}#?$/g;
+const regex = /^https?:\/\/(www\.)?[a-zA-Z\0-9]+\.[\w\-._~:/?#[\]@!$&'()*+,;=]{2,}#?$/;
 const {
   getCards,
   createCard,
