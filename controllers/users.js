@@ -73,10 +73,10 @@ module.exports.createUser = (req, res, next) => {
         res.send({ data: user });
       })
       .catch((err) => {
-        if (err.code === 11000) {
-          next(new ConflictError('Пользователь с такими данными уже зарегистрирован!'));
-        } else if (err.name === 'ValidationError') {
+        if (err.name === 'ValidationError') {
           next(new BadRequestError('Неправильный, некорректный запрос'));
+        } else if (err.code === 11000) {
+          next(new ConflictError('Пользователь с такими данными уже зарегистрирован!'));
         } else {
           next(new ServerError('Произошла внутренняя ошибка сервера'));
         }
@@ -144,5 +144,11 @@ module.exports.login = (req, res, next) => {
       })
         .send({ token });
     })
-    .catch(() => next(new ServerError('Произошла внутренняя ошибка сервера')));
+    .catch((err) => {
+      if (err.name === 'UnauthorizedError') {
+        next(err);
+      } else {
+        next(new ServerError('Произошла внутренняя ошибка сервера'));
+      }
+    });
 };
