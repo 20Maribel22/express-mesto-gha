@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 app.post('/signin', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
+    password: Joi.string().required(),
   }),
 }), login);
 
@@ -32,7 +32,7 @@ app.post('/signup', celebrate({
     about: Joi.string().default('Исследователь').min(2).max(30),
     avatar: Joi.string().pattern(regex),
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
+    password: Joi.string().required(),
   }),
 }), createUser);
 
