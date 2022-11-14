@@ -8,7 +8,6 @@ const ConflictError = require('../errors/ConflictError');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const ServerError = require('../errors/ServerError');
-const SECRET_CODE = require('../utils/config');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -137,7 +136,7 @@ module.exports.login = (req, res, next) => {
   return User.findUserByCredentials(email, password, next)
     .then((user) => {
       // создадим токен
-      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : SECRET_CODE, { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'some-secret-key', { expiresIn: '7d' });
       res.cookie('jwt', token, {
         // token - наш JWT токен, который мы отправляем
         maxAge: 3600000 * 24,
