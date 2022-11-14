@@ -145,11 +145,5 @@ module.exports.login = (req, res, next) => {
       })
         .send({ token });
     })
-    .catch((err) => {
-      if (err.name === 'UnauthorizedError') {
-        next(new UnauthorizedError('Неправильные почта или пароль'));
-      } else {
-        next(new ServerError('Произошла внутренняя ошибка сервера'));
-      }
-    });
+    .catch(() => next(new UnauthorizedError('Неправильные почта или пароль')));
 };
